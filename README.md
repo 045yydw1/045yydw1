@@ -14,3 +14,7 @@ Here are some ideas to get you started:
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
 -->
+
+## 大肥鱼（DeepSeek Harness + QQ）
+
+大肥鱼插件源码和 QQ 图片/表情包识别接入说明：[plugins/dsh-dafeiyu](./plugins/dsh-dafeiyu/README.md)。图片识别通过 DeepSeek Harness 的 DeepSeek 账号视觉插件实现。

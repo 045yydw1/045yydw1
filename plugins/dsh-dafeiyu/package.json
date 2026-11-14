@@ -1,0 +1,28 @@
+{
+  "name": "dsh-dafeiyu",
+  "version": "0.1.0",
+  "description": "大肥鱼 —— DeepSeek Harness 的鲸鱼人格插件：长期记忆、心情状态与 QQ(OneBot 11) 桥接",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "qq",
+    "onebot",
+    "persona",
+    "memory"
+  ],
+  "license": "MIT"
+}

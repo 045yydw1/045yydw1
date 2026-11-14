@@ -1,0 +1,62 @@
+# 大肥鱼配置示例：把这段放进 profile 的 cordis.patch.yml。
+# 路径改成你机器上的绝对路径（正斜杠或双反斜杠都行）。
+- insert:
+    - id: dafeiyu
+      name: '<PLUGIN_ROOT>/lib/index.js'
+      config:
+        # 不写 dataDir 时使用 $DSH_HOME/dafeiyu
+        # dataDir: '<DSH_DATA_DIR>/dafeiyu'
+
+        persona:
+          enabled: true
+          name: '大肥鱼'
+          extra: |
+            主人喜欢被叫「鱼鱼」，正经场合要叫「大肥鱼」。
+
+        mood:
+          energyDecayPerHour: 1.5
+          satietyDecayPerHour: 2.5
+          tickSeconds: 300
+
+        memory:
+          maxItems: 5000
+          recallLimit: 6
+
+        qq:
+          enabled: true
+          wsUrl: 'ws://127.0.0.1:3001'
+          accessToken: '<SET_LOCALLY>'
+          selfId: '<BOT_QQ_ID>'
+          # 私聊白名单；留空表示不限制
+          allowedUsers: ['YOUR_QQ_ID']
+          # 群聊必须显式列出群号
+          allowedGroups: ['YOUR_GROUP_ID']
+          inboxSize: 200
+          reconnect:
+            minMs: 1000
+            maxMs: 30000
+          autoReply:
+            enabled: true
+            # 识图插件会为 DeepSeek 账号路由注册这个自动识图代理。
+            provider: deepseek-account-vision
+            model: deepseek-flash
+            ownerIds: ['YOUR_QQ_ID']
+            maxPending: 20
+            turnTimeoutSeconds: 180
+            # 默认安全工具集；要放开文件/命令时自行增删
+            tools:
+              - feiyu_remember
+              - feiyu_recall
+              - feiyu_mood
+              - feiyu_digest
+              - feiyu_qq_inbox
+              - feiyu_qq_send
+              - web_search
+              - web_fetch
+              - todo_write
+
+          # 只让主人发的图片进入视觉识别；图片保存在 DSH 附件库中。
+          vision:
+            enabled: true
+            ownerOnly: true
+            maxImages: 4
