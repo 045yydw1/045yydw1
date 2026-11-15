@@ -108,7 +108,7 @@ qq:
 
 QQ 私聊支持鱼鱼闹钟：说“明天早上八点叫我”即可设置，也可以让鱼鱼列出或取消闹钟。时间按运行电脑的本地时区；闹钟保存在 DSH 数据目录，QQ 暂时掉线时会稍后重试。群聊暂不支持闹钟。
 
-联网工具来自 DeepSeek Harness 官方 Web 组件。当前 Desktop profile 已配置 DeepSeek 搜索和网页读取；搜索使用登录中的 DeepSeek 账号。若账号搜索不可用，可在 Plugins → Built-in plugin settings → Web search and fetch 检查提供方。
+联网搜索通过鱼鱼内置的 Bing provider 接入 DeepSeek Harness 标准 `web_search` 工具，不需要 API Key，也不依赖看图登录路由。网页读取使用 Harness 的 HTTP provider。搜索词会发送给 Bing；网页结果作为外部资料供鱼鱼参考。
 
 ### 最简开启（只让主对话变成大肥鱼）
 
@@ -214,6 +214,7 @@ lib/
   persona.js     人格段 + {{feiyu_state}}
   tools.js       模型工具定义
   alarms.js      持久化 QQ 闹钟
+  web-search.js  Bing 搜索适配器
   qq.js          OneBot 11 客户端
   auto-reply.js  QQ ↔ agent 胶水
 ```
