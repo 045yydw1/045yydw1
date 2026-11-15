@@ -22,11 +22,12 @@ import { DailyScheduler, GreetingScheduler, writeDailyDiary, dayKey } from './da
 import { pruneVoices } from './tts.js'
 import { StickerBox } from './stickers.js'
 import { AlarmScheduler } from './alarms.js'
+import { createBingSearchProvider } from './web-search.js'
 
 export const name = 'dafeiyu'
 
 /** 需要工具注册表与 agent 工厂（QQ 自动回复要用 ctx.agents）。 */
-export const inject = ['tools', 'agents', 'attachments']
+export const inject = ['tools', 'agents', 'attachments', 'web']
 
 function defaultState() {
   return {
@@ -320,6 +321,12 @@ export function apply(ctx, rawConfig) {
   const disposers = []
   const registered = []
   const failed = []
+  try {
+    disposers.push(ctx.web.registerSearchProvider(createBingSearchProvider()))
+    ctx.logger?.info?.('[dafeiyu] 已注册 Bing 联网搜索')
+  } catch (error) {
+    ctx.logger?.warn?.(`[dafeiyu] Bing 搜索注册失败：${error?.message ?? error}`)
+  }
   for (const tool of tools) {
     try {
       disposers.push(ctx.tools.register(tool))
