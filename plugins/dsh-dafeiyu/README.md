@@ -2,7 +2,8 @@
 
 给 DeepSeek Harness 养的蓝色小鲸鱼：**人格 + 长期记忆 + 心情 + QQ 桥接**。
 
-- 六个模型工具：记住、回忆、查/改心情、存摘要、发 QQ、看 QQ 收件箱
+- 模型工具：记忆、心情、QQ 收件箱与发送、当前私聊闹钟等
+- QQ 私聊可通过 DSH `web_search` / `web_fetch` 联网搜索并读取网页（需在 profile 中启用 Harness web 工具及搜索提供方）
 - 系统提示词里注入实时状态（心情、精力、饱腹、好感、最近记得的事、QQ 未读数）
 - OneBot 11 正向 WebSocket 连接 NapCat / LLOneBot / Lagrange
 - QQ 私聊/群聊可自动回复：每个联系人一个持久 DSH 会话，重启后自动 resume
@@ -100,9 +101,14 @@ qq:
 | `qq.autoReply.provider/model` | 空 | 可选，覆盖 QQ agent 的模型；看图需 `deepseek-account-vision` / `deepseek-flash` |
 | `qq.autoReply.maxPending` | `20` | 每个联系人排队上限 |
 | `qq.autoReply.tools` | 内置安全列表 | QQ agent 可用的工具白名单 |
+| `qq.autoReply.ownerIds` | `[]` | 主人 QQ 号；主人可使用 DSH 已加载的工具，包括联网搜索 |
 | `qq.vision.enabled` | `true` | 是否把主人发来的图片转成 DSH 图片附件 |
 | `qq.vision.ownerOnly` | `true` | 只识别 `autoReply.ownerIds` 中主人的图片 |
 | `qq.vision.maxImages` | `4` | 每条 QQ 消息最多识别的图片数 |
+
+QQ 私聊支持鱼鱼闹钟：说“明天早上八点叫我”即可设置，也可以让鱼鱼列出或取消闹钟。时间按运行电脑的本地时区；闹钟保存在 DSH 数据目录，QQ 暂时掉线时会稍后重试。群聊暂不支持闹钟。
+
+联网工具来自 DeepSeek Harness 的 `@deepseek-ai/dsh-tool-web`，并且要在 profile 的 Web search and fetch 设置中选好可用的搜索提供方。大肥鱼不会代替 DSH 安装或配置搜索服务。
 
 ### 最简开启（只让主对话变成大肥鱼）
 
@@ -229,3 +235,4 @@ lib/
 | 收得到消息但不回复 | `qq.autoReply.enabled=true`；群聊要加 `allowedGroups`；看日志里的投递失败 |
 | 回复很慢 | QQ agent 要跑完整轮次；可给 `autoReply.provider/model` 指定更快的模型 |
 | 不想让 QQ 触发工具 | 把 `autoReply.tools` 设为 `['feiyu_recall','feiyu_mood']` 之类 |
+
