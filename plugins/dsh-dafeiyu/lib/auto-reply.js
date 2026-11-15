@@ -16,6 +16,9 @@ const SAFE_TOOLS = [
   'feiyu_qq_inbox',
   'feiyu_qq_send',
   'feiyu_sticker',
+  'feiyu_alarm',
+  'web_search',
+  'web_fetch',
 ]
 
 export function sessionIdFor(targetKey) {
@@ -411,3 +414,4 @@ export function createAutoReplier({ ctx, config, bridge, attachments = ctx.attac
     },
   }
 }
+
