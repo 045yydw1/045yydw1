@@ -44,10 +44,11 @@ function moodResult(snapshot) {
  *   tts: {voice: string, rate: string, pitch: string, dir: string},
  *   resolveTarget?: (sessionId: string) => any,
  *   markVoice?: (sessionId: string) => void,
+ *   alarms?: { add: Function, list: Function, cancel: Function },
  * }} deps
  */
 export function createTools(deps) {
-  const { config, memory, getMood, updateMood, snapshot, qq, now, tts, resolveTarget, markVoice, stickers } = deps
+  const { config, memory, getMood, updateMood, snapshot, qq, now, tts, resolveTarget, markVoice, stickers, alarms } = deps
 
   const remember = {
     name: 'feiyu_remember',
@@ -295,6 +296,43 @@ export function createTools(deps) {
       if (qq.status().state !== 'connected') throw new Error('QQ 未连接，消息没有发出去')
       await qq.send(target, text)
       return { ok: true, target, message: `已发送到 ${target}：${text.slice(0, 80)}` }
+    },
+  }
+
+  const alarm = {
+    name: 'feiyu_alarm',
+    description: '给当前 QQ 私聊设置、查看或取消一次性闹钟。时间使用本地时区，格式 YYYY-MM-DD HH:mm。只能提醒当前聊天的联系人。',
+    parameters: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        action: { type: 'string', enum: ['set', 'list', 'cancel'] },
+        when: { type: 'string', description: '设置闹钟的本地时间，例如 2026-11-16 08:30。' },
+        message: { type: 'string', description: '响铃时要提醒的内容。' },
+        id: { type: 'string', description: '取消时使用的闹钟编号。' },
+      }, required: ['action'],
+    },
+    output: {
+      schema: { type: 'object', additionalProperties: false, properties: { ok: { type: 'boolean' }, message: { type: 'string' } }, required: ['ok', 'message'] },
+      render: (_args, value) => textBlocks(value.message),
+    },
+    execute(args, exec) {
+      if (!alarms) throw new Error('闹钟服务没有启动')
+      const sessionId = exec?.agent?.id ?? ''
+      const target = sessionId ? resolveTarget?.(sessionId) : undefined
+      if (!target || !target.startsWith('private:')) throw new Error('闹钟目前只支持当前 QQ 私聊')
+      if (args.action === 'set') {
+        const item = alarms.add({ target, when: requireText(args.when, 'when'), message: requireText(args.message, 'message') })
+        return { ok: true, message: `闹钟已设好，编号 ${item.id}，${new Date(item.at).toLocaleString()} 提醒你：${item.message}` }
+      }
+      if (args.action === 'list') {
+        const items = alarms.list(target)
+        return { ok: true, message: items.length ? items.map((item) => `${item.id} · ${new Date(item.at).toLocaleString()} · ${item.message}`).join('\n') : '当前没有待响的闹钟。' }
+      }
+      if (args.action === 'cancel') {
+        const id = requireText(args.id, 'id')
+        return { ok: true, message: alarms.cancel(id, target) ? `已取消闹钟 ${id}。` : `没找到编号 ${id} 的闹钟。` }
+      }
+      throw new Error('action 必须是 set、list 或 cancel')
     },
   }
 
@@ -625,5 +663,6 @@ export function createTools(deps) {
     },
   }
 
-  return [remember, recall, mood, digest, qqSend, qqInbox, shell, voice, watch, sticker, qzone]
+  return [remember, recall, mood, digest, qqSend, qqInbox, alarm, shell, voice, watch, sticker, qzone]
 }
+
