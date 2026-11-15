@@ -7,6 +7,7 @@ import { JsonStore } from './store.js'
 
 const CJK = /[\u3400-\u9fff]/
 const MAX_TEXT = 2000
+export const MEMORY_CATEGORIES = ['profile', 'preference', 'plan', 'promise', 'event', 'other']
 
 export function tokenize(text) {
   const lower = String(text ?? '').toLowerCase()
@@ -32,7 +33,7 @@ function normalizeTags(tags) {
 
 export function scoreMemory(item, queryTokens, queryText, { now = Date.now(), contact = '' } = {}) {
   if (!item || typeof item.text !== 'string') return 0
-  const itemTokens = tokenize(`${item.text} ${(item.tags ?? []).join(' ')}`)
+  const itemTokens = tokenize(`${item.text} ${(item.tags ?? []).join(' ')} ${item.category ?? ''}`)
   let overlap = 0
   for (const token of queryTokens) if (itemTokens.has(token)) overlap += 1
   const phrase = queryText && item.text.toLowerCase().includes(queryText.toLowerCase())
@@ -68,13 +69,25 @@ export class MemoryBook {
     return this.load().items
   }
 
-  add({ text, tags = [], importance = 3, source = 'manual', contact = '', now = Date.now() } = {}) {
+  add({ text, tags = [], category = 'other', replaces = '', importance = 3, source = 'manual', contact = '', now = Date.now() } = {}) {
     const clean = String(text ?? '').trim().slice(0, MAX_TEXT)
     if (!clean) throw new Error('记忆内容不能为空')
     const normalizedTags = normalizeTags(tags)
+    if (replaces) {
+      const old = this.items.find((item) => item.id === replaces && (!contact || !item.contact || item.contact === contact))
+      if (!old) throw new Error('没有找到要更新的记忆')
+      old.revisions = [...(old.revisions ?? []), { text: old.text, ts: old.ts }].slice(-3)
+      old.text = clean
+      old.category = MEMORY_CATEGORIES.includes(category) ? category : 'other'
+      old.tags = normalizedTags.length ? normalizedTags : old.tags ?? []
+      old.ts = now
+      this.store.save()
+      return old
+    }
     const existing = this.items.find((item) => item.text === clean)
     if (existing) {
       existing.ts = now
+      existing.category = MEMORY_CATEGORIES.includes(category) ? category : existing.category ?? 'other'
       existing.importance = Math.max(clampImportance(existing.importance), clampImportance(importance))
       existing.tags = [...new Set([...(existing.tags ?? []), ...normalizedTags])].slice(0, 8)
       this.store.save()
@@ -84,6 +97,7 @@ export class MemoryBook {
       id: randomUUID(),
       text: clean,
       tags: normalizedTags,
+      category: MEMORY_CATEGORIES.includes(category) ? category : 'other',
       importance: clampImportance(importance),
       source: String(source).slice(0, 32),
       contact: contact ? String(contact).slice(0, 64) : '',
@@ -113,6 +127,7 @@ export class MemoryBook {
     if (!queryText) return []
     const queryTokens = tokenize(queryText)
     return this.items
+      .filter((item) => !contact || !item.contact || item.contact === contact)
       .map((item) => ({ item, score: scoreMemory(item, queryTokens, queryText, { now, contact }) }))
       .filter((entry) => entry.score >= minScore)
       .sort((a, b) => b.score - a.score || (b.item.ts ?? 0) - (a.item.ts ?? 0))
@@ -124,6 +139,10 @@ export class MemoryBook {
     return [...this.items]
       .sort((a, b) => (b.ts ?? 0) - (a.ts ?? 0))
       .slice(0, Math.max(0, limit))
+  }
+
+  highlights(limit = 3) {
+    return [...this.items].sort((a, b) => (b.importance ?? 3) - (a.importance ?? 3) || (b.ts ?? 0) - (a.ts ?? 0)).slice(0, limit)
   }
 
   /**
@@ -151,3 +170,4 @@ export class MemoryBook {
     return this.items.length
   }
 }
+
