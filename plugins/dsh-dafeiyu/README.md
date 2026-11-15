@@ -108,7 +108,7 @@ qq:
 
 QQ 私聊支持鱼鱼闹钟：说“明天早上八点叫我”即可设置，也可以让鱼鱼列出或取消闹钟。时间按运行电脑的本地时区；闹钟保存在 DSH 数据目录，QQ 暂时掉线时会稍后重试。群聊暂不支持闹钟。
 
-联网工具来自 DeepSeek Harness 的 `@deepseek-ai/dsh-tool-web`，并且要在 profile 的 Web search and fetch 设置中选好可用的搜索提供方。大肥鱼不会代替 DSH 安装或配置搜索服务。
+联网工具来自 DeepSeek Harness 官方 Web 组件。当前 Desktop profile 已配置 DeepSeek 搜索和网页读取；搜索使用登录中的 DeepSeek 账号。若账号搜索不可用，可在 Plugins → Built-in plugin settings → Web search and fetch 检查提供方。
 
 ### 最简开启（只让主对话变成大肥鱼）
 
@@ -163,6 +163,7 @@ QQ 私聊支持鱼鱼闹钟：说“明天早上八点叫我”即可设置，�
 | `feiyu_digest` | 把会话摘要写进长期记忆（重要度 4） |
 | `feiyu_qq_send` | 主动发 QQ：`private:123` / `group:456` |
 | `feiyu_qq_inbox` | 查看最近收到的 QQ 消息，可清空未读 |
+| `feiyu_alarm` | 在当前 QQ 私聊设置、查看或取消持久化的一次性闹钟 |
 
 心情与数值会随时间自然衰减；饿/困会覆盖显式心情，好感过低会 emo，被骂会短暂生气。
 
@@ -174,6 +175,7 @@ QQ 私聊支持鱼鱼闹钟：说“明天早上八点叫我”即可设置，�
 $DSH_HOME/dafeiyu/
   state.json      心情、计数
   memory.json     长期记忆（明文 JSON）
+  alarms.json     待响的 QQ 闹钟
   last-boot.json  最近一次加载的工具清单，排查用
 ```
 
@@ -210,7 +212,8 @@ lib/
   mood.js        心情引擎（纯函数）
   memory.js      记忆与召回
   persona.js     人格段 + {{feiyu_state}}
-  tools.js       六个工具定义
+  tools.js       模型工具定义
+  alarms.js      持久化 QQ 闹钟
   qq.js          OneBot 11 客户端
   auto-reply.js  QQ ↔ agent 胶水
 ```
