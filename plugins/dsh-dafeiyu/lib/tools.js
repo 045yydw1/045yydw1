@@ -60,6 +60,8 @@ export function createTools(deps) {
       properties: {
         text: { type: 'string', description: '要记住的内容，一句完整的话，例如「主人喜欢喝冰美式，不加糖」。' },
         tags: { type: 'array', items: { type: 'string' }, description: '可选标签，例如 ["偏好","咖啡"]。' },
+        category: { type: 'string', enum: ['profile', 'preference', 'plan', 'promise', 'event', 'other'], description: '记忆类型。' },
+        replaces: { type: 'string', description: '主人纠正旧信息时，填旧记忆编号以更新而非另存一条。' },
         importance: { type: 'integer', description: '重要度 1-5，默认 3；越重要越容易被召回。' },
         contact: { type: 'string', description: '可选：这条记忆属于哪个 QQ 联系人，例如 private:123456。' },
       },
@@ -79,13 +81,16 @@ export function createTools(deps) {
       },
       render: (_args, value) => textBlocks(`已记住（共 ${value.count} 条）：${value.text}`),
     },
-    async execute(args) {
+    async execute(args, exec) {
+      const target = resolveTarget?.(exec?.agent?.id ?? '')
       const item = memory.add({
         text: requireText(args.text, 'text'),
         tags: args.tags,
+        category: args.category ?? 'other',
+        replaces: args.replaces ?? '',
         importance: clampInt(args.importance, 1, 5, config.memory.defaultImportance),
         source: 'model',
-        contact: args.contact,
+        contact: target || args.contact,
         now: now(),
       })
       return { ok: true, id: item.id, count: memory.count(), text: item.text }
@@ -118,8 +123,10 @@ export function createTools(deps) {
               type: 'object',
               additionalProperties: false,
               properties: {
+                id: { type: 'string' },
                 text: { type: 'string' },
                 tags: { type: 'array', items: { type: 'string' } },
+                category: { type: 'string' },
                 importance: { type: 'integer' },
                 ts: { type: 'integer' },
                 score: { type: 'number' },
@@ -137,10 +144,11 @@ export function createTools(deps) {
             : value.memories.map((m, i) => `${i + 1}. ${m.text}（重要度 ${m.importance}）`).join('\n'),
         ),
     },
-    async execute(args) {
+    async execute(args, exec) {
+      const target = resolveTarget?.(exec?.agent?.id ?? '')
       const memories = memory.recall(requireText(args.query, 'query'), {
         limit: clampInt(args.limit, 1, 20, config.memory.recallLimit),
-        contact: args.contact ?? '',
+        contact: target || args.contact || '',
         now: now(),
       })
       return {
