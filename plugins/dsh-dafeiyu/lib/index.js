@@ -240,6 +240,7 @@ export function apply(ctx, rawConfig) {
         ctx,
         config,
         bridge,
+        memory,
         attachments: ctx.attachments,
         logger: ctx.logger,
         log: qqLog,
