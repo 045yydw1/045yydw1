@@ -2,7 +2,7 @@
  * 大肥鱼（dsh-dafeiyu）—— DeepSeek Harness 插件入口。
  *
  * 1. 人格：把「大肥鱼」写进系统提示词，并注入实时心情 / 记忆 / QQ 状态。
- * 2. 记忆与心情：六个工具 + 本地 JSON 持久化。
+ * 2. 记忆、心情与闹钟：本地 JSON 持久化。
  * 3. QQ 桥接：OneBot 11 正向 WebSocket，可选自动回复（每个联系人一个持久会话）。
  *
  * 零第三方依赖：只使用 Node 内置模块，便于在 Desktop 的 profile 里直接加载。
@@ -21,6 +21,7 @@ import { LifeScheduler } from './life.js'
 import { DailyScheduler, GreetingScheduler, writeDailyDiary, dayKey } from './daily.js'
 import { pruneVoices } from './tts.js'
 import { StickerBox } from './stickers.js'
+import { AlarmScheduler } from './alarms.js'
 
 export const name = 'dafeiyu'
 
@@ -96,6 +97,7 @@ export function apply(ctx, rawConfig) {
   let life = null
   let daily = null
   let greetings = null
+  let alarms = null
   let stickerBox = null
   let unread = 0
   let allowedCount = 0
@@ -260,6 +262,8 @@ export function apply(ctx, rawConfig) {
       greetings = new GreetingScheduler({ config, bridge, logger: ctx.logger, log: qqLog })
       greetings.start()
     }
+    alarms = new AlarmScheduler({ file: path.join(dataDir, 'alarms.json'), bridge, logger: ctx.logger })
+    alarms.start()
   }
 
   const qqAdapter = bridge
@@ -310,6 +314,7 @@ export function apply(ctx, rawConfig) {
     resolveTarget: (sessionId) => replier?.targetForSession?.(sessionId),
     markVoice: (sessionId) => replier?.markVoiceSent?.(sessionId),
     stickers: stickerBox,
+    alarms,
   })
 
   const disposers = []
@@ -434,6 +439,11 @@ export function apply(ctx, rawConfig) {
       /* ignore */
     }
     try {
+      alarms?.stop()
+    } catch {
+      /* ignore */
+    }
+    try {
       replier?.dispose()
     } catch {
       /* ignore */
@@ -448,3 +458,4 @@ export function apply(ctx, rawConfig) {
 }
 
 export { defaultState }
+
